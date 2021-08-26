@@ -28,7 +28,7 @@ data(PM25)
 
 ```{r}
 # FB model evaluation of pm data
-fbresult <- fbEval(pm)
+fbresult <- fbEval(PM25)
 ```
 
 

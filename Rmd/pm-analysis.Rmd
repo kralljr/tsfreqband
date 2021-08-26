@@ -1,0 +1,174 @@
+---
+title: "PM2.5 FAQSD vs. monitors using frequency band and overall model evaluation"
+author: "Jenna Krall"
+output: html_document
+---
+
+
+```{r, echo = F}
+knitr::opts_chunk$set(echo = F, message = F, warning = F, fig.height = 8, fig.width = 6)
+```
+
+```{r}
+# load libraries
+library(lubridate)
+library(RColorBrewer)
+library(patchwork)
+library(knitr)
+library(tidyverse)
+# paper library
+library(tsfreqband)
+```
+
+```{r}
+# load data
+data(PM25)
+```
+
+
+```{r}
+# FB model evaluation of pm data
+fbresult <- fbEval(pm)
+```
+
+
+# Figure 6
+
+
+```{r}
+# example monitors
+exids <- c("060374008", "131210032", "490353006")
+
+# Format for plotting TS (Figure 6)
+plotts <- fbresult$ts %>%
+    # get first 2 years of data (for plotting)
+    mutate(year = year(date)) %>%
+    group_by(id) %>%
+    mutate(md = min(date), datediff = date - md) %>% ungroup() %>%
+    # restrict to first 2 years
+    filter(datediff < (366 * 2), id %in% exids) %>% 
+    # relevel cut
+    mutate(cut = factor(cut, levels = c("overall", "seasonal", "monthly", "acute"),
+                        labels = c("Concentration", "k=1 (season)", "k=2", "k=6 (acute)")),
+           model = factor(model, levels = c("truth", "pred"), labels = c("monitor", "FAQSD")),
+           subid = substr(id, 1, 2),
+           # reformat monitor names
+           city = case_when(subid == "06" ~ "LA",
+                            subid == "13" ~ "Atl",
+                            subid == "49" ~ "SLC"),
+           id2 = paste0(id, " (", city, ")")) %>%
+    select(-c(md, datediff)) 
+
+g1 <- ggplot(plotts, aes(x = date, y = value, group = model, colour = model)) +
+    geom_line(alpha = 0.5) + 
+    scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+    facet_wrap(id2 ~ cut, scales = "free", ncol = 4) +
+    scale_color_discrete(name = "") + xlab("") +
+    theme_bw() +
+    theme(legend.position = "top", text= element_text(size = 14))
+
+```
+
+
+```{r, fig.height =6, fig.width = 8}
+g1
+```
+
+
+# Figure 7
+
+
+
+```{r}
+# restrict to acute vs. overall (relevant for short-term health)
+res1 <- filter(fbresult$meval, cut %in% c("acute", "overall")) %>%
+  filter(!is.na(cut)) %>%
+  rename(measure = cut) %>%
+  pivot_longer(cor : rmse)
+
+# reorder based on overall correlation
+ids <- filter(res1, name == "cor", measure == "overall") %>%
+  ungroup() %>%
+  mutate(id = fct_reorder(id, value)) %>%
+  arrange(id)
+keeps <-  select(ids, id) %>% with(., as.vector(id))
+res1 <- filter(res1, id %in% keeps) %>%
+  mutate(id = factor(id, levels = ids$id))
+
+
+
+```
+
+
+```{r plotres}
+
+# Metric is comparison metric
+# Ylabel is label
+# yint is horizontal line to draw
+plotexp1 <- function(metric, ylabel, yint = 0, guide = T) {
+  # Filter data
+  res2 <- filter(res1, name == metric) %>%
+    mutate(measure = factor(measure, levels = c("overall", "acute"),
+                            labels = c("Overall", "Acute")),
+           type = ifelse(id %in% exids,
+                         "highlight", "no")) %>%
+    unique() %>% ungroup()
+  
+  
+  
+  # get color and line type
+  cols <- c(brewer.pal(3, "Dark2"))
+  cols <- c("red", "black")
+
+  # cols <- c("black", "red")
+  lts <- c(1, 2)
+
+  lp <- ifelse(guide, "right", "none")
+  # plot
+  ggplot() +
+    # add points/lines for comparing NACR and CMAQ
+    geom_point(data = res2, aes(x = id, y = value, colour = type,# colour = measure, 
+                                shape = measure),
+               alpha = 0.8, size = 2) +
+    geom_line(data = res2, aes(x = id, y = value, group = id),
+              alpha = 0.3) +
+    # Format values
+    scale_colour_manual(name = "", values = cols, guide = F) +
+    scale_linetype_manual(name = "", values = lts) +
+    scale_shape(name = "") +
+    
+    # Add y-label/x-label
+    ylab(ylabel) +
+    xlab("") +  
+    # Add horizontal line
+    geom_hline(yintercept = yint, linetype = 2) +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+          text = element_text(size = 12))
+  
+}
+```
+
+
+```{r, fig.height = 6, fig.width = 8}
+
+pcor <- plotexp1("cor", "Correlation r", yint = 1)
+plvr <- plotexp1("lvr",  "LVR", yint = 0)
+prmse <- plotexp1("rmse", "RMSE")
+
+fig3 <- pcor + plvr + prmse  + plot_layout(guides = "collect", ncol = 2) 
+fig3
+```
+
+
+# Results for example monitors
+
+```{r}
+filter(fbresult$meval, cut %in% c("acute", "overall"), id %in% exids) %>%
+  filter(!is.na(cut)) %>%
+  rename(measure = cut) %>%
+  pivot_longer(cor : rmse) %>%
+  pivot_wider(names_from = "measure") %>%
+  filter(name != "lvr") %>%
+    kable(digits = 2)
+```

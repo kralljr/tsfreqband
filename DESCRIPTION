@@ -1,0 +1,20 @@
+Package: tsfreqband
+Title: Frequency Band Model Evaluation for Air Pollution Predictions
+Version: 0.1
+Authors@R: 
+    c(person(given = "Jenna",
+           family = "Krall",
+           role = c("aut", "cre"),
+           email = "jenna.krall@gmail.com"),
+      person("Joshua", "Keller", "aut", "joshua.keller@colostate.edu"), 
+      person("Roger", "Peng", "aut", "rdpeng@gmail.com"))
+Description: Applies overall and frequency band model evaluation to compare ground truth (e.g., monitoring data) to air pollution predictions.
+License: GPL-2
+Imports:
+    dplyr,
+    tsModel,
+    tidyr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

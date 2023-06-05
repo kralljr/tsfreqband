@@ -20,7 +20,6 @@ A dataset of PM2.5 monitoring data and predictions from fused CMAQ for 17 monito
 \item latitude. Latitude
 \item FAQSD.  Predictions from the FAQSD model
 \item monitor. Monitor concentrations
-...
 }
 }
 \keyword{datasets}

@@ -11,7 +11,6 @@
 #' 		\item latitude. Latitude
 #' 		\item FAQSD.  Predictions from the FAQSD model
 #' 		\item monitor. Monitor concentrations
-#'		...
 #'}
 #'
 #' @docType data

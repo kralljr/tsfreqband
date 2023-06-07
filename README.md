@@ -41,7 +41,7 @@ fbEval(PM25, id = "monid", truth = "monitor", pred = "FAQSD")
 The results from `fbEval` are a list of two items: `ts` and `meval`:
 
 - `ts`: A data frame with the time series at the acute, monthly, and seasonal frequency bands for both the gold standard (truth) and the predictions (pred), as well as the overall time series.
-- `meval`: A dataframe with the model evaluation results including the correlation (cor), log variance ratio (lvr) and root mean squared error (rmse) between the gold standard (truth) and predictions (pred) at the acute, monthly, seasonal frequency time bands and for the overall time series.
+- `meval`: A data frame with the model evaluation results including the correlation (cor), log variance ratio (lvr) and root mean squared error (rmse) between the gold standard (truth) and predictions (pred) at the acute, monthly, seasonal frequency  bands, as well as for the overall time series.
 
 ## Citation
 
